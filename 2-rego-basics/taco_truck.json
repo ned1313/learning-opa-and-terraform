@@ -1,0 +1,41 @@
+{
+    "menu": {
+        "drinks": [
+            "soda",
+            "milk",
+            "water"
+        ],
+        "entrees": [
+            {
+                "type": "taco",
+                "filling": "chicken",
+                "cheese": "jack"
+            },
+            {
+                "type": "taco",
+                "filling": "beef",
+                "cheese": "cheddar"
+            },
+            {
+                "type": "taco",
+                "filling": "fish",
+                "cheese": "blanco"
+            },
+            {
+                "type": "burrito",
+                "filling": "beef",
+                "cheese": "cheddar"
+            },
+            {
+                "type": "burrito",
+                "filling": "chicken",
+                "cheese": "jack"
+            },
+            {
+                "type": "burrito",
+                "filling": "tinga",
+                "cheese": "blanco"
+            }
+        ]
+    }
+}
