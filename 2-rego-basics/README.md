@@ -1,6 +1,6 @@
 # Learning the Basics of Rego
 
-The policy language used by OPA is Rego (pronounced ray-go). For this section of the tutorial we are going to learn some of the basics of using Rego by interacting with a set of JSON data provided by the file [taco_truck.json](./taco_truck.json). 
+The policy language used by OPA is Rego (pronounced ray-go). For this section of the tutorial we are going to learn some of the basics of using Rego by interacting with a set of JSON data provided by the file [taco_truck.json](./taco_truck.json).
 
 For me, the best way to learn a new language is through immediate feedback, so we are going to set up the equivalent of a OPA sandbox to do our testing. You are going to need the OPA interactive command line to do this. It's called REPL which stands for read-evaluate-print loop. Installing OPA is as simple as downloading the latest [release from their GitHub page](https://github.com/open-policy-agent/opa/releases).
 
@@ -65,7 +65,9 @@ data.menu.drinks
 data.menu.drinks[0]
 ```
 
-If you've worked with `jq` in the past or any other data structure that uses dot-notation, this should feel familiar. But there is some syntax you'll find that is new. Let's start by introducing the `import` keyword. Referring to an established path in the data document is going to get old fast, instead we can create a shortand by importing a specific path with a shortname:
+If you've worked with `jq` in the past or any other data structure that uses dot-notation, this should feel familiar. But there is some new syntax to learn as well.
+
+Let's start by introducing the `import` keyword. Referring to an established path in the data document is going to get old fast, instead we can create a shorthand by importing a specific path with a shorter name:
 
 ```bash
 > import data.menu.drinks
@@ -78,6 +80,8 @@ If you've worked with `jq` in the past or any other data structure that uses dot
   "water"
 ]
 ```
+
+> Quick note about packages: When we launched REPL, we implicitly started a Rego module. Modules define a package they're part of. This give you the ability to define and import packages for other Rego modules to use. When we started REPL we didn't declare a package name, so once we added a statement to our module (using the `import` keyword), REPL created a package called `repl`, which we can see by running the `show` command.
 
 By default, the `import` statement will use the end of the path as the shorthand name, but you can also specify as name with the `as` keyword like this:
 
@@ -95,7 +99,18 @@ By default, the `import` statement will use the end of the path as the shorthand
 # Output truncated
 ```
 
-Now we probably want to do some data transformation, let's start by simply defining a variable assigment:
+We can see the `import` statement and any other statements in the module by running the `show` command:
+
+```bash
+> show
+
+package repl
+
+import data.menu.drinks
+import data.menu.entrees as meals
+```
+
+Next let's do a little data transformation by adding more statements to our package. First we'll do a simple variable assignment:
 
 ```bash
 > first_drink := drinks[0]
@@ -105,11 +120,13 @@ Rule 'first_drink' defined in package repl. Type 'show' to see rules.
 "soda"
 ```
 
-Wait, what? We just created a rule? In the parlance of Rego, yes we did. To grasp why, let's take a moment to talk about the data document model used by OPA.
+Wait, what? We just created a rule? In the parlance of Rego, yes we did. Within our package, there is now a state that says `first_drink := drinks[0]`.
+
+What does it mean to be a rule? And where is the result stored? This is an excellent moment to differentiate between the various data document types in OPA.
 
 OPA maintains two data document types: base and virtual. The base document is the static data loaded into OPA from external sources, for instance our `taco_truck.json` file is part of the base document. The virtual document is the result of the rules defined in the Rego you write, which may use information from the base document as part of the evaluation. The two documents are combined together into a single `data` document we can access in the REPL session.
 
-When we added the statement `first_drink := drinks[0]` to our REPL session, it added a rule to our current package (`repl`) and evaluated the results and stored them in the virtual data document. We can see the current rules by running the `show` command:
+When we added the statement `first_drink := drinks[0]` to our module, it added a rule to our current package (`repl`) and evaluated the results and stored them in the virtual data document. We can see the current rules by running the `show` command:
 
 ```bash
 > show
@@ -121,8 +138,6 @@ import data.menu.entrees as meals
 
 first_drink := drinks[0]
 ```
-
-Well, would you look at that? It's not just the rule we created, but also the package we're working in `repl` and the import statements we added as well.
 
 You can view the contents of both the base and virtual documents by simply entering `data`:
 
@@ -163,28 +178,37 @@ Our first rule wasn't very useful, so let's construct something a little more so
 
 ```bash
 chicken_dishes[dishes] {
-
         dishes := meals[_]
-
         dishes.filling == "chicken"
 }
 ```
 
-Allow me to break this down. The first line `chicken[dishes] {` defines a rule that we want to evaluate called `chicken_dishes` with an argument called `dishes`. Inside the rule we set our argument to be the list of all meals- remember we set meals to `data.menu.entrees`- and then we filter dishes to only include those with `filling` equal to chicken. You can test the logic directly in the REPL session by running the following:
+Allow me to break this down. We are defining a variable called `chicken_dishes` that contains `dishes` only where `dishes` is the list of meals and the `filling` value of `dishes` is equal to `"chicken"`.
 
-```bash
-> meals[_].filling == "chicken"
-+-------------------------------+
-| meals[_].filling == "chicken" |
-+-------------------------------+
-| true                          |
-| true                          |
-+-------------------------------+
+Rego has introduced some new keywords that help us better understand what is going on. If you import the package `future.keywords`, you can construct the equivalent of the above rule like this:
+
+```rego
+chicken_dishes contains dishes {
+        some dishes in meals
+        dishes.filling == "chicken"
+}
 ```
 
-## Rules
+At least I think it makes things a bit clearer, YMMV. Our variable `chicken_dishes` contains the values in `dishes` where `dishes` is a value in `meals` and the `filling` value of `dishes` is equal to `"chicken"`.
 
-## Packages
+In the parlance of Rego, the `chicken_dishes contains dishes if` portion is the rule *head* and the rest is the rule *body*. This is actually a partial rule as it does not evaluate to true or false. We can construct a complete rule like this:
 
-## Input
+```rego
+have_chicken_dishes := count(chicken_dishes) > 0
+```
 
+Checking on the value of `have_chicken_dishes`:
+
+```bash
+> have_chicken_dishes
+true
+```
+
+The value stored is `true`. Now we have a basic understanding of some of the syntax of Rego, how to construct expressions and rules, and how to do so in an interactive environment. If you're looking for a complete reference on the syntax, keywords, and built-in functions of Rego, check out the [Rego Reference](https://www.openpolicyagent.org/docs/latest/policy-language/).
+
+In the next lesson, we are going to construct a Rego package in a file and load it into OPA, and we'll start working with an actual Terraform JSON-formatted execution plan instead of our lil' taco truck.
