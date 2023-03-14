@@ -120,7 +120,7 @@ Rule 'first_drink' defined in package repl. Type 'show' to see rules.
 "soda"
 ```
 
-Wait, what? We just created a rule? In the parlance of Rego, yes we did. Within our package, there is now a state that says `first_drink := drinks[0]`.
+Wait, what? We just created a rule? In the parlance of Rego, yes we did. Within our package, there is now a statement that says `first_drink := drinks[0]`.
 
 What does it mean to be a rule? And where is the result stored? This is an excellent moment to differentiate between the various data document types in OPA.
 
