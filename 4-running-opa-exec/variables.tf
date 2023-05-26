@@ -3,7 +3,7 @@ variable "common_tags" {
   description = "Common tags to apply to all resources."
   default = {
     "environment" = "dev"
-    "purpose"     = "opa"
+    "project"     = "opa"
   }
 }
 
