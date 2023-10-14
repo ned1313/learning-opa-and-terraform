@@ -83,8 +83,6 @@ All the other keys aren't really important to us, but feel free to explore them 
 We can dig deeper into our `planned_values` key by using the `data.planned_values` expression. The area we are most interested in for this example is the key `data.planned_values.root_module.resources`. This key contains a list of all the resources defined in our configuration with the arguments filled out.
 
 ```bash
-
-```bash
 # View the contents of the planned_values key
 > data.planned_values.root_module.resources[keys]
 
